@@ -45,11 +45,11 @@ dependencies:
   flutter_lyric: ^2.0.4+6
   flutter_slidable: ^3.1.2
   get: ^4.7.1
-  google_fonts: ^6.1.0
+  google_fonts: ^6.2.1
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   html: ^0.15.6
-  ionicons: ^0.2.2
+  ionicons: ^0.2.3
   jni: ^0.14.0
   just_audio: ^0.9.46
   just_audio_media_kit:
@@ -84,6 +84,7 @@ dependencies:
     git:
       url: https://github.com/anandnet/youtube_explode_dart.git
       ref: 1d9ec9baa806705b1d859260eeb389ec28c6b024
+
 dev_dependencies:
 
   # The "flutter_lints" package below contains a set of recommended lints to
