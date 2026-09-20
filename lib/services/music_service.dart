@@ -7,6 +7,7 @@ import 'package:get/get.dart' as getx;
 import 'package:hive/hive.dart';
 
 import '/models/album.dart';
+import '/models/playlist.dart';
 import '/services/utils.dart';
 import '../utils/helper.dart';
 import 'constant.dart';
@@ -531,6 +532,83 @@ class MusicServices extends getx.GetxService {
         })
         .whereType<String>()
         .toList();
+  }
+
+  Future<List<Playlist>> getYouTubeMusicLibraryPlaylists() async {
+    final data = Map.from(_context);
+    data['browseId'] = 'FEmusic_library_playlists';
+    final response = (await _sendRequest('browse', data)).data;
+    final playlists = <Playlist>[];
+    final seenIds = <String>{};
+
+    void visit(dynamic node) {
+      if (node is Map) {
+        final renderer = node['musicTwoRowItemRenderer'];
+        if (renderer is Map) {
+          final browseId = nav(renderer, [
+            'navigationEndpoint',
+            'browseEndpoint',
+            'browseId'
+          ]);
+          final title = nav(renderer, ['title', 'runs', 0, 'text']);
+          if (browseId is String &&
+              title is String &&
+              browseId.isNotEmpty &&
+              seenIds.add(browseId)) {
+            final thumbnails = nav(renderer, ['thumbnail', 'thumbnails']);
+            playlists.add(Playlist(
+              title: title,
+              playlistId: browseId,
+              thumbnailUrl: thumbnails is List && thumbnails.isNotEmpty
+                  ? thumbnails.last['url']
+                  : Playlist.thumbPlaceholderUrl,
+              description: 'YouTube Music playlist',
+              isYouTubeMusicPlaylist: true,
+            ));
+          }
+        }
+        for (final value in node.values) {
+          visit(value);
+        }
+      } else if (node is List) {
+        for (final value in node) {
+          visit(value);
+        }
+      }
+    }
+
+    visit(response);
+    return playlists;
+  }
+
+  Future<Map<String, dynamic>> getYouTubeMusicLikedSongs() async {
+    final data = Map.from(_context);
+    data['browseId'] = 'FEmusic_liked';
+    final response = (await _sendRequest('browse', data)).data;
+    final items = <dynamic>[];
+
+    void visit(dynamic node) {
+      if (node is Map) {
+        final contents = node['musicShelfRenderer']?['contents'];
+        if (contents is List) items.addAll(contents);
+        for (final value in node.values) {
+          visit(value);
+        }
+      } else if (node is List) {
+        for (final value in node) {
+          visit(value);
+        }
+      }
+    }
+
+    visit(response);
+    return {
+      'title': 'YouTube Music favorites',
+      'playlistId': 'FEmusic_liked',
+      'thumbnails': const [],
+      'description': 'Songs liked on YouTube Music',
+      'tracks': parsePlaylistItems(items),
+    };
   }
 
   ///Specially created for deep-links

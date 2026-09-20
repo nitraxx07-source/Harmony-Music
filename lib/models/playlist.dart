@@ -28,10 +28,12 @@ class Playlist {
       required this.thumbnailUrl,
       this.songCount,
       this.isPipedPlaylist = false,
+      this.isYouTubeMusicPlaylist = false,
       this.isCloudPlaylist = true});
   final String playlistId;
   String title;
   final bool isPipedPlaylist;
+  final bool isYouTubeMusicPlaylist;
   final String? description;
   String thumbnailUrl;
   final String? songCount;
@@ -48,6 +50,7 @@ class Playlist {
       description: json["description"] ?? "Playlist",
       songCount: json['itemCount'],
       isPipedPlaylist: json["isPipedPlaylist"] ?? false,
+      isYouTubeMusicPlaylist: json["isYouTubeMusicPlaylist"] ?? false,
       isCloudPlaylist: json["isCloudPlaylist"] ?? true);
 
   Map<String, dynamic> toJson() => {
@@ -59,6 +62,7 @@ class Playlist {
         ],
         "itemCount": songCount,
         "isPipedPlaylist": isPipedPlaylist,
+        "isYouTubeMusicPlaylist": isYouTubeMusicPlaylist,
         "isCloudPlaylist": isCloudPlaylist
       };
 
@@ -70,6 +74,7 @@ class Playlist {
         description: description,
         songCount: songCount,
         isPipedPlaylist: isPipedPlaylist,
+        isYouTubeMusicPlaylist: isYouTubeMusicPlaylist,
         isCloudPlaylist: isCloudPlaylist);
   }
 

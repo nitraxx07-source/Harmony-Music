@@ -46,6 +46,7 @@ dependencies:
   flutter_slidable: ^3.1.2
   get: ^4.7.1
   google_fonts: ^6.2.1
+  google_sign_in: ^6.2.2
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   html: ^0.15.6
@@ -82,8 +83,8 @@ dependencies:
   window_manager: ^0.4.2
   youtube_explode_dart:
     git:
-      url: https://github.com/anandnet/youtube_explode_dart.git
-      ref: 1d9ec9baa806705b1d859260eeb389ec28c6b024
+      url: https://github.com/Hexer10/youtube_explode_dart.git
+      ref: master
 
 dev_dependencies:
 

@@ -18,6 +18,7 @@ import '../../../models/media_Item_builder.dart';
 import '../../../models/playlist.dart';
 import '../../../services/music_service.dart';
 import '../../../services/piped_service.dart';
+import '../../../services/youtube_auth_service.dart';
 import '../Home/home_screen_controller.dart';
 import '../Library/library_controller.dart';
 
@@ -76,6 +77,8 @@ class PlaylistScreenController extends PlaylistAlbumScreenControllerBase
   void fetchPlaylistDetails(Playlist? playlist_, String playlistId) async {
     final isIdOnly = playlist_ == null;
     final isPipedPlaylist = playlist_?.isPipedPlaylist ?? false;
+    final isYouTubeMusicPlaylist =
+      playlist_?.isYouTubeMusicPlaylist ?? playlistId == 'FEmusic_liked';
     isDefaultPlaylist.value = (playlistId == "SongDownloads" ||
         playlistId == "SongsCache" ||
         playlistId == "LIBRP" ||
@@ -112,7 +115,8 @@ class PlaylistScreenController extends PlaylistAlbumScreenControllerBase
           fetchSongsfromDatabase(playlistId);
         }
       } else {
-        _fetchSongOnline(playlistId, isIdOnly, isPipedPlaylist);
+          _fetchSongOnline(playlistId, isIdOnly, isPipedPlaylist,
+            isYouTubeMusicPlaylist);
       }
       isContentFetched.value = true;
     } catch (e) {
@@ -121,13 +125,29 @@ class PlaylistScreenController extends PlaylistAlbumScreenControllerBase
     }
   }
 
-  Future<void> _fetchSongOnline(
-      String id, bool isIdOnly, bool isPipedPlaylist) async {
+    Future<void> _fetchSongOnline(String id, bool isIdOnly, bool isPipedPlaylist,
+      [bool isYouTubeMusicPlaylist = false]) async {
     isContentFetched.value = false;
 
     if (isPipedPlaylist) {
       songList.value = (await Get.find<PipedServices>().getPlaylistSongs(id));
       isContentFetched.value = true;
+      checkDownloadStatus();
+      return;
+    }
+
+    if (isYouTubeMusicPlaylist) {
+      var youtubePlaylistId = id;
+      if (id == 'FEmusic_liked') {
+        youtubePlaylistId =
+            await Get.find<YouTubeAuthService>().getLikedPlaylistId() ?? id;
+      }
+      if (youtubePlaylistId == 'FEmusic_liked') {
+        songList.clear();
+      } else {
+        songList.value = await Get.find<YouTubeAuthService>()
+            .getPlaylistSongs(youtubePlaylistId);
+      }
       checkDownloadStatus();
       return;
     }

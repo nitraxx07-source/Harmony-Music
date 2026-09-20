@@ -13,6 +13,7 @@ import '../../widgets/add_to_playlist.dart';
 import '/ui/widgets/sort_widget.dart';
 import '../Settings/settings_screen_controller.dart';
 import '/services/piped_service.dart';
+import '/services/youtube_auth_service.dart';
 import '../../../utils/helper.dart';
 import '/models/album.dart';
 import '/models/artist.dart';
@@ -223,6 +224,11 @@ class LibraryPlaylistsController extends GetxController
         playlistId: "LIBFAV",
         thumbnailUrl: Playlist.thumbPlaceholderUrl,
         isCloudPlaylist: false),
+      Playlist(
+        title: "YouTube Music favorites",
+        playlistId: "FEmusic_liked",
+        thumbnailUrl: Playlist.thumbPlaceholderUrl,
+        isYouTubeMusicPlaylist: true),
     Playlist(
         title: "cachedOrOffline".tr,
         playlistId: "SongsCache",
@@ -252,7 +258,7 @@ class LibraryPlaylistsController extends GetxController
     super.onInit();
   }
 
-  void refreshLib() async {
+  Future<void> refreshLib() async {
     final box = await Hive.openBox("LibraryPlaylists");
     libraryPlaylists.value = [
       ...initPlst,
@@ -266,9 +272,38 @@ class LibraryPlaylistsController extends GetxController
     if (appPrefsBox.containsKey("piped")) {
       if (appPrefsBox.get("piped")['isLoggedIn']) await syncPipedPlaylist();
     }
+    if (Get.find<YouTubeAuthService>().isSignedIn.value) {
+      await syncYouTubeMusicPlaylists();
+    }
 
     isContentFetched.value = true;
     await box.close();
+  }
+
+  Future<void> syncYouTubeMusicPlaylists() async {
+    try {
+      final remotePlaylists =
+          await Get.find<YouTubeAuthService>().getPlaylists();
+      final box = await Hive.openBox('LibraryPlaylists');
+      final remoteIds = remotePlaylists.map((playlist) => playlist.playlistId);
+      for (final playlist in remotePlaylists) {
+        box.put(playlist.playlistId, playlist.toJson());
+      }
+      for (final playlist in libraryPlaylists.toList()) {
+        if (playlist.isYouTubeMusicPlaylist &&
+            playlist.playlistId != 'FEmusic_liked' &&
+            !remoteIds.contains(playlist.playlistId)) {
+          libraryPlaylists.remove(playlist);
+          await box.delete(playlist.playlistId);
+        }
+      }
+      libraryPlaylists.removeWhere((playlist) =>
+          playlist.isYouTubeMusicPlaylist &&
+          playlist.playlistId != 'FEmusic_liked');
+      libraryPlaylists.addAll(remotePlaylists);
+    } catch (error) {
+      printERROR('Unable to sync YouTube Music library: $error');
+    }
   }
 
   void updatePlaylistIntoDb(Playlist playlist) async {
@@ -281,6 +316,19 @@ class LibraryPlaylistsController extends GetxController
     for (Playlist plst in libraryPlaylists.toList()) {
       if (plst.isPipedPlaylist) {
         libraryPlaylists.remove(plst);
+      }
+    }
+  }
+
+  Future<void> removeYouTubeMusicPlaylists() async {
+    libraryPlaylists.removeWhere((playlist) =>
+        playlist.isYouTubeMusicPlaylist &&
+        playlist.playlistId != 'FEmusic_liked');
+    final box = await Hive.openBox('LibraryPlaylists');
+    for (final key in box.keys.toList()) {
+      final value = box.get(key);
+      if (value is Map && value['isYouTubeMusicPlaylist'] == true) {
+        await box.delete(key);
       }
     }
   }

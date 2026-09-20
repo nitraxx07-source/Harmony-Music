@@ -12,6 +12,7 @@ import '../../widgets/restore_dialog.dart';
 import '../Library/library_controller.dart';
 import '../../widgets/snackbar.dart';
 import '/ui/widgets/link_piped.dart';
+import '/ui/widgets/link_google.dart';
 import '/services/music_service.dart';
 import '/ui/player/player_controller.dart';
 import '/ui/utils/theme_controller.dart';
@@ -287,6 +288,35 @@ class SettingsScreen extends StatelessWidget {
                               settingsController.unlinkPiped();
                             }
                           }),
+                    ),
+                    ListTile(
+                      contentPadding:
+                          const EdgeInsets.only(left: 5, right: 10, top: 0),
+                        title: const Text('Cuenta de Google'),
+                      subtitle: const Text(
+                          'Muestra tus playlists y favoritos de YouTube con tu cuenta.'),
+                      trailing: TextButton(
+                        child: Obx(() => Text(
+                              settingsController.isLinkedWithYouTubeMusic.value
+                                  ? 'Cerrar sesión'
+                                  : 'Iniciar sesión',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium!
+                                  .copyWith(fontSize: 15),
+                            )),
+                        onPressed: () {
+                          if (settingsController
+                              .isLinkedWithYouTubeMusic.isFalse) {
+                            showDialog(
+                              context: context,
+                                  builder: (context) => const LinkGoogle(),
+                            );
+                          } else {
+                            settingsController.unlinkYouTubeMusic();
+                          }
+                        },
+                      ),
                     ),
                     Obx(() => (settingsController.isLinkedWithPiped.isTrue)
                         ? ListTile(

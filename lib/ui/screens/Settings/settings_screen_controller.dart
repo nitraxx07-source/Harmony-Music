@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../utils/update_check_flag_file.dart';
 import '/services/piped_service.dart';
+import '/services/youtube_auth_service.dart';
 import '../Library/library_controller.dart';
 import '../../widgets/snackbar.dart';
 import '../../../utils/helper.dart';
@@ -35,6 +36,7 @@ class SettingsScreenController extends GetxController {
   final discoverContentType = "QP".obs;
   final isNewVersionAvailable = false.obs;
   final isLinkedWithPiped = false.obs;
+  final isLinkedWithYouTubeMusic = false.obs;
   final stopPlyabackOnSwipeAway = false.obs;
   final currentAppLanguageCode = "en".obs;
   final downloadLocationPath = "".obs;
@@ -121,6 +123,8 @@ class SettingsScreenController extends GetxController {
     if (setBox.containsKey("piped")) {
       isLinkedWithPiped.value = setBox.get("piped")['isLoggedIn'];
     }
+    isLinkedWithYouTubeMusic.bindStream(
+      Get.find<YouTubeAuthService>().isSignedIn.stream);
     stopPlyabackOnSwipeAway.value =
         setBox.get('stopPlyabackOnSwipeAway') ?? false;
     if (GetPlatform.isAndroid) {
@@ -336,6 +340,11 @@ class SettingsScreenController extends GetxController {
     ScaffoldMessenger.of(Get.context!).showSnackBar(
         snackbar(Get.context!, "unlinkAlert".tr, size: SanckBarSize.MEDIUM));
     box.close();
+  }
+
+  Future<void> unlinkYouTubeMusic() async {
+    await Get.find<YouTubeAuthService>().signOut();
+    await Get.find<LibraryPlaylistsController>().removeYouTubeMusicPlaylists();
   }
 
   Future<void> resetAppSettingsToDefault() async {
